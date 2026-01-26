@@ -10,7 +10,10 @@ data = pd.read_csv("zmy2020a.csv", header=None, encoding="cp932")
 meta = data.iloc[:6]
 maindata = data.iloc[6:].copy()
 
-maindata.columns = ["年月", "総合", "食料"]
+colnames = data.iloc[0].tolist()
+colnames[0] = "年月" 
+
+maindata.columns = colnames
 
 maindata["年月"] = maindata["年月"].astype(str)
 maindata["年月"] = pd.to_datetime(maindata["年月"], format="%Y%m")
@@ -25,11 +28,11 @@ with st.sidebar:
 
 category = st.multiselect(
     "品目を選択してください",
-    options=["総合", "食料"],
+    options=colnames[1:],
     default=["総合"]
 )
 
-df_selected = maindata[maindata["年月"] == kikan]
+#df_selected = maindata[maindata["年月"] == kikan]
 
 st.write("選択した年月:", kikan.strftime("%Y-%m"))
-st.write(df_selected[["年月"] + category])
+st.write(maindata[maindata["年月"] + category])
