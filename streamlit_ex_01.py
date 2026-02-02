@@ -1,12 +1,9 @@
 import streamlit as st
 import pandas as pd
-import numpy as np 
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import plotly.express as px
 
-plt.rcParams['font.family'] = 'MS Gothic'
 
-st.title('消費者物価指数（CPI）の推移比較')
+st.title('消費者物価指数（CPI）の推移')
 
 data = pd.read_csv("zmy2020a.csv", header=None, encoding="cp932")
 colnames = data.iloc[0].tolist()
@@ -19,7 +16,7 @@ maindata["年月"] = pd.to_datetime(maindata["年月"].astype(str), format="%Y%m
 with st.sidebar:
     st.header("分析設定")
     
-    # 期間選択（授業未使用UI部品①）
+    # 期間選択
     dates = maindata["年月"].sort_values().unique()
     start_date, end_date = st.select_slider(
         "分析期間を選択",
@@ -41,32 +38,68 @@ df_show = maindata.loc[mask, ["年月"] + category].copy()
 df_show.set_index("年月", inplace=True)
 df_show = df_show.apply(pd.to_numeric, errors="coerce")
 
- 
-# sideberグラフメモリ設定
-with st.sidebar:
-    st.write("------------")
-    st.write("グラフのメモリ設定")
-    
-    default_min = df_show.min().min() - 5
-    default_max = df_show.max().max() + 5
-    
-    ymin = st.sidebar.number_input('最小値', value=default_min)
-    ymax = st.sidebar.number_input('最大値', value=default_max)
 
 
-# メイン画面表示
+# 折れ線グラフ
 st.write(f"### {start_date.strftime('%Y-%m')} から {end_date.strftime('%Y-%m')} の推移")
+fig = px.line(df_show, x=df_show.index, y=df_show.columns)
 
-# グラフ描画
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(df_show)
+    
+fig.update_layout(
+    legend_title_text='',
+    template="plotly_dark", 
+    paper_bgcolor="#1e1e1e",
+    plot_bgcolor="#1e1e1e",
+    font_color="white",
+    hovermode="x unified",
+        legend=dict(
+        font=dict(color="white"))
 
-ax.set_ylim(ymin, ymax)
+)    
+
+st.plotly_chart(fig, use_container_width=True)
+
+#棒グラフ
+st.write("最新月の品目別比較（棒グラフ）")
+
+latest_data = df_show.iloc[-1]
+    
+fig_bar = px.bar(
+        x=latest_data.index, 
+        y=latest_data.values,
+        labels={'x': '品目', 'y': '指数'} 
+    )
+    
+fig_bar.update_layout(
+    template="plotly_dark",
+    paper_bgcolor="#1e1e1e",  
+    plot_bgcolor="#1e1e1e",    
+    font_color="white" ,
+    showlegend=False # 棒グラフは色が1色なので凡例は不要
+)
+
+fig_bar.update_traces(marker_color='skyblue') 
+st.plotly_chart(fig_bar, use_container_width=True)
 
 
-ax.grid(True)
-ax.legend(df_show.columns)
-st.pyplot(fig)
+
+# 最新データの表
+st.write("最新データの状況")
+if not df_show.empty:
+    cols = st.columns(len(category)) 
+    last_row = df_show.iloc[-1]      
+    prev_row = df_show.iloc[-2]      
+    
+    for i, col_name in enumerate(category):
+        val = last_row[col_name]
+        diff = val - prev_row[col_name]
+        with cols[i]:
+            st.metric(label=col_name, value=f"{val:.1f}", delta=f"{diff:.1f}")
+
+st.write("---")
+
+
+
 
 # データダウンロード（授業未使用UI部品③）
 st.download_button(
