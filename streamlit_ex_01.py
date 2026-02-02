@@ -31,6 +31,14 @@ with st.sidebar:
         options=colnames[1:],
         default=["総合", "食料"]
     )
+    with st.expander("消費者物価指数（CPI）の用語解説"):
+        st.markdown("""
+    消費者物価指数は、全国の世帯が購入する家計に係る財及びサービスの価格等を総合した物価の変動を時系列的に測定するものです。  
+    すなわち家計の消費構造を一定のものに固定し、これに要する費用が物価の変動によって、どう変化するかを指数値で示したもので、毎月作成しています。  
+    指数計算に採用している各品目のウエイトは総務省統計局実施の家計調査の結果等に基づいています。  
+    品目の価格は総務省統計局実施の小売物価統計調査によって調査された小売価格を用いています。  
+    参照：統計局ホームページhttps://www.stat.go.jp/data/cpi/index.html
+    """)
    
 # データ処理
 mask = (maindata["年月"] >= start_date) & (maindata["年月"] <= end_date)
@@ -58,9 +66,10 @@ fig.update_layout(
 )    
 
 st.plotly_chart(fig, use_container_width=True)
+st.write("---")
 
 #棒グラフ
-st.write("最新月の品目別比較（棒グラフ）")
+st.write("**最新月の品目別比較（棒グラフ）**")
 
 latest_data = df_show.iloc[-1]
     
@@ -75,7 +84,7 @@ fig_bar.update_layout(
     paper_bgcolor="#1e1e1e",  
     plot_bgcolor="#1e1e1e",    
     font_color="white" ,
-    showlegend=False # 棒グラフは色が1色なので凡例は不要
+    showlegend=False 
 )
 
 fig_bar.update_traces(marker_color='skyblue') 
@@ -84,7 +93,9 @@ st.plotly_chart(fig_bar, use_container_width=True)
 
 
 # 最新データの表
-st.write("最新データの状況")
+st.write("**最新データの状況（先月との比較）**")
+st.caption("※矢印は**先月との比較**です。プラスは値上がり、マイナスは値下がりを表します。")
+
 if not df_show.empty:
     cols = st.columns(len(category)) 
     last_row = df_show.iloc[-1]      
@@ -94,17 +105,11 @@ if not df_show.empty:
         val = last_row[col_name]
         diff = val - prev_row[col_name]
         with cols[i]:
-            st.metric(label=col_name, value=f"{val:.1f}", delta=f"{diff:.1f}")
+            st.metric(label=col_name, value=f"{val:.1f}", delta=f"{diff:.1f}",delta_color="inverse")
 
+
+
+#リンクボタン
 st.write("---")
-
-
-
-
-# データダウンロード（授業未使用UI部品③）
-st.download_button(
-    label="CSVデータをダウンロード",
-    data=df_show.to_csv().encode('utf-8'),
-    file_name='cpi_data.csv',
-    mime='text/csv',
-)
+st.write("※使用データの出典")
+st.link_button("e-Stat (政府統計の総合窓口) を見る", "https://www.e-stat.go.jp/stat-search/files?page=1&layout=dataset&toukei=00200573&tstat=000001150147&cycle=0&year=20230&month=12040605&tclass1=000001150151&tclass2=000001150152&tclass3=000001150153&tclass4=000001150156&stat_infid=000032103934")
