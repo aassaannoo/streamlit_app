@@ -23,8 +23,8 @@ maindata["年月"] = pd.to_datetime(maindata["年月"], format="%Y%m")
 with st.sidebar:
     kikan = st.select_slider(
         "期間を選択してください",
-        options=maindata["年月"].sort_values().unique()
-    )
+        options=maindata["年月"].sort_values().unique(),
+        format_func=lambda x: x.strftime("%Y-%m") )
 
 category = st.multiselect(
     "品目を選択してください",
@@ -34,5 +34,6 @@ category = st.multiselect(
 
 #df_selected = maindata[maindata["年月"] == kikan]
 
+
 st.write("選択した年月:", kikan.strftime("%Y-%m"))
-st.write(maindata[maindata["年月"] + category])
+st.write(maindata.loc[maindata["年月"] == kikan, ["年月"] + category])
